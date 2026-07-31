@@ -56,6 +56,15 @@
                 検索
             </button>
             <a href="{{ route('admin.contacts.index') }}" class="text-sm underline">クリア</a>
+
+            @php
+                $exportStatuses = $filters['status'] ?? [];
+                $exportParams = count($exportStatuses) === 1 ? ['status' => $exportStatuses[0]] : [];
+            @endphp
+            <a href="{{ route('admin.contacts.export', $exportParams) }}"
+               class="ml-auto rounded border border-gray-300 px-4 py-2 text-sm hover:bg-gray-100">
+                CSVダウンロード
+            </a>
         </div>
     </form>
 
