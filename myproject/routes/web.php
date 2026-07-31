@@ -23,6 +23,7 @@ Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 
 Route::prefix('admin/contacts')->name('admin.contacts.')->middleware('auth')->group(function () {
     Route::get('/', [AdminContactController::class, 'index'])->name('index');
+    Route::get('/export', [AdminContactController::class, 'export'])->name('export');
     Route::get('/{contact}', [AdminContactController::class, 'show'])->name('show');
     Route::patch('/{contact}', [AdminContactController::class, 'update'])->name('update');
 });

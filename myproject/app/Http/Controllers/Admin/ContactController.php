@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ContactController extends Controller
 {
@@ -79,6 +80,50 @@ class ContactController extends Controller
         return redirect()
             ->route('admin.contacts.show', $contact)
             ->with('status_updated', true);
+    }
+
+    /**
+     * お問い合わせ一覧をCSVでエクスポート（statusパラメータで絞り込み可能）
+     */
+    public function export(Request $request): StreamedResponse
+    {
+        $validated = $request->validate([
+            'status' => ['nullable', Rule::in($this->statusValues())],
+        ], [
+            'in' => '選択された:attributeは無効な値です。',
+        ], [
+            'status' => 'ステータス',
+        ]);
+
+        $contacts = Contact::query()
+            ->when($validated['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+            ->latest()
+            ->get();
+
+        $filename = 'contacts_'.now()->format('YmdHis').'.csv';
+
+        return response()->streamDownload(function () use ($contacts) {
+            $handle = fopen('php://output', 'w');
+
+            fwrite($handle, "\xEF\xBB\xBF");
+
+            fputcsv($handle, ['ID', '名前', 'メールアドレス', '件名', 'ステータス', '受信日時']);
+
+            foreach ($contacts as $contact) {
+                fputcsv($handle, [
+                    $contact->id,
+                    $contact->name,
+                    $contact->email,
+                    $contact->subject,
+                    $contact->status->label(),
+                    $contact->created_at->format('Y-m-d H:i:s'),
+                ]);
+            }
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
 
     /**
