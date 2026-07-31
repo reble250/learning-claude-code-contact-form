@@ -5,11 +5,12 @@ namespace Tests\Feature;
 use App\Models\Contact;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
  * docs/テストケース.md に基づく機能テスト。
- * 各テストメソッドのコメントにあるID（F01, A01, B01等）はテストケース.md内のNoに対応する。
+ * メソッド名の先頭（F01, A01, B01等）はテストケース.md内のNoに対応する。
  */
 class ContactFormTest extends TestCase
 {
@@ -34,8 +35,8 @@ class ContactFormTest extends TestCase
     // 1. フォーム入力側
     // =========================================================
 
-    /** F01: 入力画面表示 */
-    public function test_input_form_is_displayed(): void
+    #[Test]
+    public function F01_入力画面が表示される(): void
     {
         $response = $this->get(route('contact.create'));
 
@@ -46,8 +47,8 @@ class ContactFormTest extends TestCase
         $response->assertSee('本文');
     }
 
-    /** F02: 必須項目未入力 */
-    public function test_validation_fails_when_all_fields_are_empty(): void
+    #[Test]
+    public function F02_全項目未入力だとバリデーションエラーになる(): void
     {
         $response = $this->post(route('contact.confirm'), [
             'name' => '',
@@ -65,8 +66,8 @@ class ContactFormTest extends TestCase
         ]);
     }
 
-    /** F03: メールアドレス形式不正 */
-    public function test_validation_fails_for_invalid_email_format(): void
+    #[Test]
+    public function F03_メールアドレスの形式が不正だとエラーになる(): void
     {
         $response = $this->post(route('contact.confirm'), $this->validContactData([
             'email' => 'not-an-email',
@@ -77,8 +78,8 @@ class ContactFormTest extends TestCase
         ]);
     }
 
-    /** F04: 名前が255文字超過 */
-    public function test_validation_fails_when_name_exceeds_max_length(): void
+    #[Test]
+    public function F04_名前が255文字を超えるとエラーになる(): void
     {
         $response = $this->post(route('contact.confirm'), $this->validContactData([
             'name' => str_repeat('あ', 256),
@@ -89,8 +90,8 @@ class ContactFormTest extends TestCase
         ]);
     }
 
-    /** F05: 本文が2000文字超過 */
-    public function test_validation_fails_when_body_exceeds_max_length(): void
+    #[Test]
+    public function F05_本文が2000文字を超えるとエラーになる(): void
     {
         $response = $this->post(route('contact.confirm'), $this->validContactData([
             'body' => str_repeat('あ', 2001),
@@ -101,8 +102,8 @@ class ContactFormTest extends TestCase
         ]);
     }
 
-    /** F06: バリデーションエラー時の入力保持 */
-    public function test_old_input_is_retained_after_validation_error(): void
+    #[Test]
+    public function F06_バリデーションエラー時に入力値が保持される(): void
     {
         $this->post(route('contact.confirm'), $this->validContactData([
             'name' => '保持太郎',
@@ -114,8 +115,8 @@ class ContactFormTest extends TestCase
         $response->assertSee('保持太郎', false);
     }
 
-    /** F07: XSS対策（エスケープ） */
-    public function test_html_is_escaped_in_confirm_page(): void
+    #[Test]
+    public function F07_確認画面でHTMLがエスケープされる(): void
     {
         $response = $this->post(route('contact.confirm'), $this->validContactData([
             'subject' => '<script>alert(1)</script>',
@@ -127,8 +128,8 @@ class ContactFormTest extends TestCase
         $response->assertDontSee('<script>alert(1)</script>', false); // 生のタグとしては存在しない
     }
 
-    /** F08: 確認画面の表示内容 */
-    public function test_confirm_page_displays_submitted_values(): void
+    #[Test]
+    public function F08_確認画面に入力内容が表示される(): void
     {
         $data = $this->validContactData([
             'name' => '確認太郎',
@@ -146,8 +147,8 @@ class ContactFormTest extends TestCase
         $response->assertSee($data['body']);
     }
 
-    /** F09: 「戻る」で入力保持 */
-    public function test_back_redirects_to_create_with_input_retained(): void
+    #[Test]
+    public function F09_戻るボタンで入力内容を保持したまま入力画面に戻る(): void
     {
         $data = $this->validContactData(['name' => '確認太郎']);
 
@@ -159,8 +160,8 @@ class ContactFormTest extends TestCase
         $createResponse->assertSee('確認太郎', false);
     }
 
-    /** F10: 送信・保存 */
-    public function test_store_creates_contact_and_redirects_to_thanks(): void
+    #[Test]
+    public function F10_送信するとお問い合わせが保存され完了画面へ遷移する(): void
     {
         $data = $this->validContactData(['email' => 'store@example.com']);
 
@@ -180,8 +181,8 @@ class ContactFormTest extends TestCase
         $this->assertNotNull($contact->user_agent);
     }
 
-    /** F11: 完了画面の再アクセスガード */
-    public function test_thanks_page_reload_redirects_to_create(): void
+    #[Test]
+    public function F11_完了画面を再読み込みすると入力画面へリダイレクトされる(): void
     {
         $this->post(route('contact.store'), $this->validContactData());
 
@@ -193,8 +194,8 @@ class ContactFormTest extends TestCase
         $second->assertRedirect(route('contact.create'));
     }
 
-    /** F12: 完了画面への直接アクセス */
-    public function test_thanks_page_direct_access_without_submission_redirects(): void
+    #[Test]
+    public function F12_未送信で完了画面に直接アクセスすると入力画面へリダイレクトされる(): void
     {
         $response = $this->get(route('contact.thanks'));
 
@@ -205,8 +206,8 @@ class ContactFormTest extends TestCase
     // 3. 境界値テスト（フォーム入力側）
     // =========================================================
 
-    /** B01: name/subject/body 上限ちょうど */
-    public function test_name_subject_body_at_upper_boundary_passes(): void
+    #[Test]
+    public function B01_名前_件名_本文が上限文字数ちょうどなら通過する(): void
     {
         $response = $this->post(route('contact.confirm'), $this->validContactData([
             'name' => str_repeat('あ', 255),
@@ -218,8 +219,8 @@ class ContactFormTest extends TestCase
         $response->assertSessionHasNoErrors();
     }
 
-    /** B02: email 上限ちょうど（255文字） */
-    public function test_email_at_upper_boundary_passes(): void
+    #[Test]
+    public function B02_メールアドレスが上限文字数ちょうどなら通過する(): void
     {
         $localPart = str_repeat('a', 255 - strlen('@example.com'));
 
@@ -231,8 +232,8 @@ class ContactFormTest extends TestCase
         $response->assertSessionHasNoErrors();
     }
 
-    /** B03: email 上限+1（256文字） */
-    public function test_email_over_upper_boundary_fails(): void
+    #[Test]
+    public function B03_メールアドレスが上限文字数を1文字超えるとエラーになる(): void
     {
         $localPart = str_repeat('a', 256 - strlen('@example.com'));
 
@@ -245,8 +246,8 @@ class ContactFormTest extends TestCase
         ]);
     }
 
-    /** B04: name/subject/body 下限（1文字） */
-    public function test_name_subject_body_at_lower_boundary_passes(): void
+    #[Test]
+    public function B04_名前_件名_本文が1文字でも通過する(): void
     {
         $response = $this->post(route('contact.confirm'), $this->validContactData([
             'name' => 'あ',
@@ -258,8 +259,8 @@ class ContactFormTest extends TestCase
         $response->assertSessionHasNoErrors();
     }
 
-    /** B05: subject 上限+1（256文字） */
-    public function test_subject_over_upper_boundary_fails(): void
+    #[Test]
+    public function B05_件名が上限文字数を1文字超えるとエラーになる(): void
     {
         $response = $this->post(route('contact.confirm'), $this->validContactData([
             'subject' => str_repeat('い', 256),
@@ -274,16 +275,16 @@ class ContactFormTest extends TestCase
     // 2. 管理側
     // =========================================================
 
-    /** A01: 未ログイン時の一覧アクセス制御 */
-    public function test_guest_cannot_access_admin_index(): void
+    #[Test]
+    public function A01_未ログインでは一覧にアクセスできない(): void
     {
         $response = $this->get(route('admin.contacts.index'));
 
         $response->assertRedirect(route('login'));
     }
 
-    /** A02: 未ログイン時の詳細アクセス制御 */
-    public function test_guest_cannot_access_admin_show(): void
+    #[Test]
+    public function A02_未ログインでは詳細にアクセスできない(): void
     {
         $contact = Contact::factory()->create();
 
@@ -292,8 +293,8 @@ class ContactFormTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
-    /** A03: ログイン失敗 */
-    public function test_login_fails_with_wrong_password(): void
+    #[Test]
+    public function A03_パスワードが誤っているとログインに失敗する(): void
     {
         $admin = User::factory()->create(['password' => 'password']);
 
@@ -308,8 +309,8 @@ class ContactFormTest extends TestCase
         $this->assertGuest();
     }
 
-    /** A04: ログイン成功 */
-    public function test_login_succeeds_with_correct_credentials(): void
+    #[Test]
+    public function A04_正しい認証情報でログインできる(): void
     {
         $admin = User::factory()->create(['password' => 'password']);
 
@@ -322,8 +323,8 @@ class ContactFormTest extends TestCase
         $this->assertAuthenticatedAs($admin);
     }
 
-    /** A05: 一覧表示・ページネーション */
-    public function test_admin_index_lists_contacts_paginated(): void
+    #[Test]
+    public function A05_一覧が新着順にページネーションされて表示される(): void
     {
         Contact::factory()->count(25)->create();
         $admin = User::factory()->create();
@@ -334,8 +335,8 @@ class ContactFormTest extends TestCase
         $response->assertViewHas('contacts', fn ($contacts) => $contacts->count() === 20 && $contacts->total() === 25);
     }
 
-    /** A06: 氏名部分一致検索 */
-    public function test_admin_index_filters_by_partial_name(): void
+    #[Test]
+    public function A06_氏名の部分一致で絞り込める(): void
     {
         Contact::factory()->create(['name' => '山田太郎']);
         Contact::factory()->create(['name' => '山田花子']);
@@ -350,8 +351,8 @@ class ContactFormTest extends TestCase
         $response->assertDontSee('鈴木一郎');
     }
 
-    /** A07: 該当なし検索 */
-    public function test_admin_index_shows_no_results_message(): void
+    #[Test]
+    public function A07_該当なしの場合にメッセージが表示される(): void
     {
         Contact::factory()->create(['name' => '山田太郎']);
         $admin = User::factory()->create();
@@ -362,8 +363,8 @@ class ContactFormTest extends TestCase
         $response->assertSee('該当するお問い合わせが見つかりません。');
     }
 
-    /** A08: ステータス複数選択検索 */
-    public function test_admin_index_filters_by_multiple_statuses(): void
+    #[Test]
+    public function A08_ステータスを複数選択して絞り込める(): void
     {
         Contact::factory()->create(['name' => '新規太郎', 'status' => 'new']);
         Contact::factory()->create(['name' => '対応中太郎', 'status' => 'in_progress']);
@@ -380,8 +381,8 @@ class ContactFormTest extends TestCase
         $response->assertDontSee('対応中太郎');
     }
 
-    /** A09: 受付日時期間検索 */
-    public function test_admin_index_filters_by_date_range(): void
+    #[Test]
+    public function A09_受付日時の期間で絞り込める(): void
     {
         Contact::factory()->create(['name' => '範囲外太郎'])->forceFill(['created_at' => '2026-01-01 10:00:00'])->save();
         Contact::factory()->create(['name' => '範囲内太郎'])->forceFill(['created_at' => '2026-02-15 10:00:00'])->save();
@@ -397,8 +398,8 @@ class ContactFormTest extends TestCase
         $response->assertDontSee('範囲外太郎');
     }
 
-    /** A10: 検索条件の組み合わせ（AND） */
-    public function test_admin_index_combined_filters_use_and_condition(): void
+    #[Test]
+    public function A10_検索条件を組み合わせるとAND条件になる(): void
     {
         Contact::factory()->create(['name' => '山田太郎', 'status' => 'resolved']);
         Contact::factory()->create(['name' => '山田花子', 'status' => 'new']);
@@ -414,8 +415,8 @@ class ContactFormTest extends TestCase
         $response->assertDontSee('山田太郎');
     }
 
-    /** A11: 検索条件クリア */
-    public function test_admin_index_without_filters_shows_all(): void
+    #[Test]
+    public function A11_検索条件なしなら全件表示される(): void
     {
         Contact::factory()->count(3)->create();
         $admin = User::factory()->create();
@@ -426,8 +427,8 @@ class ContactFormTest extends TestCase
         $response->assertViewHas('contacts', fn ($contacts) => $contacts->total() === 3);
     }
 
-    /** A12: ページネーションへの検索条件引き継ぎ */
-    public function test_admin_index_pagination_retains_query_string(): void
+    #[Test]
+    public function A12_ページネーションに検索条件が引き継がれる(): void
     {
         Contact::factory()->count(25)->create(['name' => '検索対象太郎']);
         $admin = User::factory()->create();
@@ -438,8 +439,8 @@ class ContactFormTest extends TestCase
         $response->assertSee('name=%E6%A4%9C%E7%B4%A2%E5%AF%BE%E8%B1%A1&amp;page=2', false);
     }
 
-    /** A13: 詳細画面の表示内容 */
-    public function test_admin_show_displays_contact_details(): void
+    #[Test]
+    public function A13_詳細画面に内容が表示される(): void
     {
         $contact = Contact::factory()->create([
             'name' => '詳細太郎',
@@ -458,8 +459,8 @@ class ContactFormTest extends TestCase
         $response->assertSee('詳細本文');
     }
 
-    /** A14: 存在しないIDへのアクセス */
-    public function test_admin_show_404_for_nonexistent_contact(): void
+    #[Test]
+    public function A14_存在しないIDにアクセスすると404になる(): void
     {
         $admin = User::factory()->create();
 
@@ -468,8 +469,8 @@ class ContactFormTest extends TestCase
         $response->assertNotFound();
     }
 
-    /** A15: ステータス更新（正常系） */
-    public function test_admin_can_update_status(): void
+    #[Test]
+    public function A15_ステータスを更新できる(): void
     {
         $contact = Contact::factory()->create(['status' => 'new']);
         $admin = User::factory()->create();
@@ -486,8 +487,8 @@ class ContactFormTest extends TestCase
         ]);
     }
 
-    /** A16: ステータス更新（異常系：不正な値） */
-    public function test_admin_status_update_rejects_invalid_value(): void
+    #[Test]
+    public function A16_不正な値でのステータス更新は拒否される(): void
     {
         $contact = Contact::factory()->create(['status' => 'new']);
         $admin = User::factory()->create();
@@ -505,8 +506,8 @@ class ContactFormTest extends TestCase
         ]);
     }
 
-    /** A17: 未ログインでのステータス更新は拒否される */
-    public function test_unauthenticated_status_update_is_blocked(): void
+    #[Test]
+    public function A17_未ログインでのステータス更新は拒否される(): void
     {
         $contact = Contact::factory()->create(['status' => 'new']);
 
@@ -521,8 +522,8 @@ class ContactFormTest extends TestCase
         ]);
     }
 
-    /** A18: ログアウト後の再アクセス制御 */
-    public function test_admin_index_is_blocked_again_after_logout(): void
+    #[Test]
+    public function A18_ログアウト後は再びアクセスが拒否される(): void
     {
         $admin = User::factory()->create();
         $this->actingAs($admin);
@@ -537,8 +538,8 @@ class ContactFormTest extends TestCase
     // 3. 境界値テスト（管理側）
     // =========================================================
 
-    /** B06: ステータス検索0件選択 */
-    public function test_admin_index_with_no_status_selected_shows_all(): void
+    #[Test]
+    public function B06_ステータス未選択なら全件表示される(): void
     {
         Contact::factory()->create(['status' => 'new']);
         Contact::factory()->create(['status' => 'resolved']);
@@ -550,8 +551,8 @@ class ContactFormTest extends TestCase
         $response->assertViewHas('contacts', fn ($contacts) => $contacts->total() === 2);
     }
 
-    /** B07: 検索フォームに不正な日付形式（修正済み: 画面にエラーを表示する） */
-    public function test_admin_index_with_invalid_date_format_shows_error(): void
+    #[Test]
+    public function B07_不正な日付形式で検索するとエラーが表示される(): void
     {
         $admin = User::factory()->create();
 
@@ -571,8 +572,8 @@ class ContactFormTest extends TestCase
         $followUp->assertSee('受付日時（从）には正しい日付を指定してください。');
     }
 
-    /** B08: 存在しないページ番号 */
-    public function test_admin_index_with_out_of_range_page_returns_empty_without_error(): void
+    #[Test]
+    public function B08_存在しないページ番号でもエラーにならず空表示になる(): void
     {
         Contact::factory()->count(5)->create();
         $admin = User::factory()->create();
@@ -583,8 +584,8 @@ class ContactFormTest extends TestCase
         $response->assertSee('お問い合わせはまだありません。');
     }
 
-    /** B16: ステータス更新に不正な値（修正済み: 詳細画面にエラーを表示する） */
-    public function test_admin_show_displays_error_after_invalid_status_update(): void
+    #[Test]
+    public function B16_不正なステータス更新後にエラーが詳細画面に表示される(): void
     {
         $contact = Contact::factory()->create(['status' => 'new']);
         $admin = User::factory()->create();
