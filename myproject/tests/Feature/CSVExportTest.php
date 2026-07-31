@@ -136,4 +136,43 @@ class CSVExportTest extends TestCase
         $this->assertSame(ContactStatus::InProgress->label(), $matchingRow[4]);
         $this->assertSame($contact->created_at->format('Y-m-d H:i:s'), $matchingRow[5]);
     }
+
+    // =========================================================
+    // 一覧画面のCSVダウンロードボタン
+    // =========================================================
+
+    #[Test]
+    public function 一覧画面にCSVダウンロードボタンが表示される(): void
+    {
+        $admin = User::factory()->create();
+
+        $response = $this->actingAs($admin)->get(route('admin.contacts.index'));
+
+        $response->assertSee('CSVダウンロード');
+        $response->assertSee(route('admin.contacts.export'), false);
+    }
+
+    #[Test]
+    public function ステータスを1つだけ選択している場合ダウンロードリンクにそのステータスが引き継がれる(): void
+    {
+        $admin = User::factory()->create();
+
+        $response = $this->actingAs($admin)->get(route('admin.contacts.index', ['status' => ['new']]));
+
+        $response->assertSee(route('admin.contacts.export', ['status' => 'new']), false);
+    }
+
+    #[Test]
+    public function ステータスを複数選択している場合ダウンロードリンクにステータスが引き継がれない(): void
+    {
+        $admin = User::factory()->create();
+
+        $response = $this->actingAs($admin)->get(route('admin.contacts.index', [
+            'status' => ['new', 'resolved'],
+        ]));
+
+        $response->assertSee(route('admin.contacts.export'), false);
+        $response->assertDontSee(route('admin.contacts.export', ['status' => 'new']), false);
+        $response->assertDontSee(route('admin.contacts.export', ['status' => 'resolved']), false);
+    }
 }
