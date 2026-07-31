@@ -3,6 +3,17 @@
 @section('title', 'お問い合わせ一覧 | 管理画面')
 
 @section('content')
+    @if ($errors->any())
+        <div class="mb-6 rounded border border-red-300 bg-red-50 p-4 text-sm text-red-700">
+            <p class="font-bold mb-2">検索条件にエラーがあります。</p>
+            <ul class="list-disc list-inside">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <form method="GET" action="{{ route('admin.contacts.index') }}"
           class="mb-6 space-y-4 rounded border border-gray-200 bg-white p-4">
         <div class="grid gap-4 sm:grid-cols-3">

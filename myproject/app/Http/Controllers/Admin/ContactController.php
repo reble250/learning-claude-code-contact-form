@@ -22,7 +22,15 @@ class ContactController extends Controller
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date'],
             'status' => ['nullable', 'array'],
-            'status.*' => [Rule::enum(ContactStatus::class)],
+            'status.*' => [Rule::in($this->statusValues())],
+        ], [
+            'date' => ':attributeには正しい日付を指定してください。',
+            'in' => '選択された:attributeは無効な値です。',
+        ], [
+            'name' => '氏名',
+            'date_from' => '受付日時（从）',
+            'date_to' => '受付日時（至）',
+            'status.*' => 'ステータス',
         ]);
 
         $contacts = Contact::query()
@@ -58,7 +66,12 @@ class ContactController extends Controller
     public function update(Request $request, Contact $contact): RedirectResponse
     {
         $validated = $request->validate([
-            'status' => ['required', Rule::enum(ContactStatus::class)],
+            'status' => ['required', Rule::in($this->statusValues())],
+        ], [
+            'required' => ':attributeを選択してください。',
+            'in' => '選択された:attributeは無効な値です。',
+        ], [
+            'status' => 'ステータス',
         ]);
 
         $contact->update($validated);
@@ -66,5 +79,15 @@ class ContactController extends Controller
         return redirect()
             ->route('admin.contacts.show', $contact)
             ->with('status_updated', true);
+    }
+
+    /**
+     * ステータスenumの値一覧（バリデーション用）
+     *
+     * @return array<int, string>
+     */
+    private function statusValues(): array
+    {
+        return array_map(fn (ContactStatus $status) => $status->value, ContactStatus::cases());
     }
 }

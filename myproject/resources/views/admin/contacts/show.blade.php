@@ -11,6 +11,14 @@
         </div>
     @endif
 
+    @if ($errors->any())
+        <div class="mb-6 rounded border border-red-300 bg-red-50 p-4 text-sm text-red-700">
+            @foreach ($errors->all() as $error)
+                <p>{{ $error }}</p>
+            @endforeach
+        </div>
+    @endif
+
     <div class="rounded border border-gray-200 bg-white p-6">
         <dl class="space-y-6">
             <div>
