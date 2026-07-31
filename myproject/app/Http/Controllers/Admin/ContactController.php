@@ -13,16 +13,31 @@ use Illuminate\View\View;
 class ContactController extends Controller
 {
     /**
-     * お問い合わせ一覧を表示
+     * お問い合わせ一覧を表示（氏名・受付日時・ステータスで絞り込み可能）
      */
-    public function index(): View
+    public function index(Request $request): View
     {
+        $filters = $request->validate([
+            'name' => ['nullable', 'string', 'max:255'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date'],
+            'status' => ['nullable', 'array'],
+            'status.*' => [Rule::enum(ContactStatus::class)],
+        ]);
+
         $contacts = Contact::query()
+            ->when($filters['name'] ?? null, fn ($query, $name) => $query->where('name', 'like', "%{$name}%"))
+            ->when($filters['date_from'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '>=', $date))
+            ->when($filters['date_to'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '<=', $date))
+            ->when($filters['status'] ?? null, fn ($query, $statuses) => $query->whereIn('status', $statuses))
             ->latest()
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
         return view('admin.contacts.index', [
             'contacts' => $contacts,
+            'statuses' => ContactStatus::cases(),
+            'filters' => $filters,
         ]);
     }
 
