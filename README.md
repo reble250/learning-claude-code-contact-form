@@ -1,6 +1,6 @@
 # learning-claude-code-contact-form
 
-書籍『Claude Code実用入門』6〜9章の学習成果物です。「お問い合わせフォーム」（Laravel/SQLite）を題材に、Claude Codeを使ったアプリ開発からテスト、MCPサーバー活用、スキル・カスタムサブエージェントによる効率化までを一通り実践しています。
+書籍『Claude Code実用入門』6〜9章の学習成果物です。「お問い合わせフォーム」（Laravel/SQLite）を題材に、devcontainerによる環境構築からアプリ開発、テスト、MCPサーバー活用、スキル・カスタムサブエージェントによる効率化までを一通り実践しています。
 
 アプリ本体は[`myproject/`](./myproject)配下（Laravelプロジェクト）。
 
@@ -49,6 +49,15 @@ Claude Codeの拡張機能そのものの学習。
 | カスタムスキル | [`.claude/skills/browser-test/SKILL.md`](./.claude/skills/browser-test/SKILL.md)（ブラウザテスト実施の定型化）、[`.claude/skills/seed-test-data/SKILL.md`](./.claude/skills/seed-test-data/SKILL.md)（テストデータ作成の定型化） |
 | カスタムサブエージェント | [`.claude/agents/cre-reviewer.md`](./.claude/agents/cre-reviewer.md)（`core-reviewer`：読み取り専用でセキュリティ／パフォーマンス／可読性／ベストプラクティスをレビュー） |
 | 試行錯誤の記録 | [`Claude Code学習メモ.md`](./Claude%20Code学習メモ.md)（ブラウザテスト自動化編）、[`Claude Code学習メモ_スキル編.md`](./Claude%20Code学習メモ_スキル編.md)（スキルの検出タイミングなど仕様調査の過程） |
+
+### 5. devcontainerによる開発環境構築
+
+Codespaces/VS Codeで即座に同じ環境を再現するための構成。
+
+| 要素 | 内容 |
+|---|---|
+| 環境定義 | [`.devcontainer/devcontainer.json`](./.devcontainer/devcontainer.json)（Ubuntuベースイメージ＋`php`Feature（8.3・Composer込み）で構築） |
+| 追加セットアップ | `postCreateCommand`で`php-mbstring`/`php-xml`/`php-curl`/`php-zip`/`php-sqlite3`等の拡張とComposer経由のlaravel installerを導入 |
 
 ## セットアップ
 
