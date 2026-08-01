@@ -9,11 +9,16 @@ use Illuminate\Database\Seeder;
 class ContactSeeder extends Seeder
 {
     /**
-     * お問い合わせのダミーデータを100件作成する（男女比半々）
+     * 既存のお問い合わせデータを削除したうえで、指定件数のダミーデータを男女比半々で作成する
      */
-    public function run(): void
+    public function run(int $count = 100): void
     {
-        Contact::factory()->count(50)->male()->create();
-        Contact::factory()->count(50)->female()->create();
+        Contact::truncate();
+
+        $male = intdiv($count, 2);
+        $female = $count - $male;
+
+        Contact::factory()->count($male)->male()->create();
+        Contact::factory()->count($female)->female()->create();
     }
 }
