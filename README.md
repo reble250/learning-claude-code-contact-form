@@ -6,7 +6,16 @@
 
 ## 学習観点とリポジトリ内容の対応
 
-### 1. DB・管理機能・認証を含んだアプリ開発
+### 1. devcontainerによる開発環境構築
+
+Codespaces/VS Codeで即座に同じ環境を再現するための構成。
+
+| 要素 | 内容 |
+|---|---|
+| 環境定義 | [`.devcontainer/devcontainer.json`](./.devcontainer/devcontainer.json)（Ubuntuベースイメージ＋`php`Feature（8.3・Composer込み）で構築） |
+| 追加セットアップ | `postCreateCommand`で`php-mbstring`/`php-xml`/`php-curl`/`php-zip`/`php-sqlite3`等の拡張とComposer経由のlaravel installerを導入 |
+
+### 2. DB・管理機能・認証を含んだアプリ開発
 
 お問い合わせフォームの本体機能。
 
@@ -18,7 +27,7 @@
 | 認証 | [`app/Http/Controllers/Auth/LoginController.php`](./myproject/app/Http/Controllers/Auth/LoginController.php)、`resources/views/auth/login.blade.php`、[`database/seeders/AdminUserSeeder.php`](./myproject/database/seeders/AdminUserSeeder.php)（管理画面へのログイン制御） |
 | 仕様 | [`docs/仕様書.md`](./myproject/docs/仕様書.md) |
 
-### 2. テスト・テストデータの作成・実施
+### 3. テスト・テストデータの作成・実施
 
 TDDと検証データ整備。
 
@@ -29,7 +38,7 @@ TDDと検証データ整備。
 | テストデータ生成 | [`database/factories/ContactFactory.php`](./myproject/database/factories/ContactFactory.php)、[`database/seeders/ContactSeeder.php`](./myproject/database/seeders/ContactSeeder.php)（男女比半々の疑似データ） |
 | テストデータ作成の省力化 | [`app/Console/Commands/SeedContacts.php`](./myproject/app/Console/Commands/SeedContacts.php) ＋ [`.claude/skills/seed-test-data/`](./.claude/skills/seed-test-data)（件数を指定して`contacts:seed`一発で作り直す） |
 
-### 3. MCPサーバーの学習（Playwright MCP）
+### 4. MCPサーバーの学習（Playwright MCP）
 
 実ブラウザ操作によるE2E検証。
 
@@ -40,7 +49,7 @@ TDDと検証データ整備。
 | 実施結果 | [`docs/ブラウザテスト結果.md`](./myproject/docs/ブラウザテスト結果.md) ＋ [`docs/screenshots/`](./myproject/docs/screenshots)（BF/BA/BB/BE系、40枚超のスクリーンショット証跡） |
 | 恒常化 | [`.claude/skills/browser-test/`](./.claude/skills/browser-test)（Playwright MCPツールでの実施手順をスキル化） |
 
-### 4. スキルとカスタムエージェントによる効率化・省力化
+### 5. スキルとカスタムエージェントによる効率化・省力化
 
 Claude Codeの拡張機能そのものの学習。
 
@@ -50,15 +59,6 @@ Claude Codeの拡張機能そのものの学習。
 | カスタムサブエージェント | [`.claude/agents/cre-reviewer.md`](./.claude/agents/cre-reviewer.md)（`core-reviewer`：読み取り専用でセキュリティ／パフォーマンス／可読性／ベストプラクティスをレビュー） |
 | 試行錯誤の記録 | [`Claude Code学習メモ.md`](./Claude%20Code学習メモ.md)（ブラウザテスト自動化編）、[`Claude Code学習メモ_スキル編.md`](./Claude%20Code学習メモ_スキル編.md)（スキルの検出タイミングなど仕様調査の過程） |
 
-### 5. devcontainerによる開発環境構築
-
-Codespaces/VS Codeで即座に同じ環境を再現するための構成。
-
-| 要素 | 内容 |
-|---|---|
-| 環境定義 | [`.devcontainer/devcontainer.json`](./.devcontainer/devcontainer.json)（Ubuntuベースイメージ＋`php`Feature（8.3・Composer込み）で構築） |
-| 追加セットアップ | `postCreateCommand`で`php-mbstring`/`php-xml`/`php-curl`/`php-zip`/`php-sqlite3`等の拡張とComposer経由のlaravel installerを導入 |
-
 ## セットアップ
 
 ```bash
@@ -67,6 +67,13 @@ composer install
 npm install && npm run build
 cp .env.example .env
 php artisan key:generate
+touch database/database.sqlite
 php artisan migrate --seed
 php artisan serve
+```
+
+`migrate --seed`で作成されるのは管理者ログイン用アカウント（`ADMIN_EMAIL`/`ADMIN_PASSWORD`、`database/seeders/AdminUserSeeder.php`）のみ。お問い合わせの動作確認用ダミーデータが欲しい場合は、続けて以下を実行する（[学習観点3](#3-テストテストデータの作成実施)参照）。
+
+```bash
+php artisan contacts:seed 100
 ```
